@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PanaMentorLabs · Launchpad</title>
+<link rel="manifest" href="data:application/json,{%22name%22:%22Launchpad%22,%22short_name%22:%22Launchpad%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23faf8f4%22,%22theme_color%22:%22%231f2937%22}">
+<style>
+  :root{
+    --bg:#faf8f4;
+    --ink:#1f2937;
+    --muted:#6b7280;
+    --card:#ffffff;
+    --border:#e7e2d8;
+    --accent:#1f2937;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+  }
+  header{
+    padding:20px 16px 14px;
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    z-index:10;
+    border-bottom:1px solid var(--border);
+  }
+  .brand{
+    font-size:13px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:2px;
+  }
+  h1{
+    font-size:24px;
+    margin:0 0 14px;
+    font-weight:700;
+  }
+  .search-row{
+    display:flex;
+    gap:8px;
+  }
+  #search{
+    flex:1;
+    padding:11px 14px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    font-size:15px;
+    background:var(--card);
+    color:var(--ink);
+  }
+  #search:focus{outline:2px solid var(--ink); outline-offset:-1px;}
+  .chips{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    margin-top:12px;
+    padding-bottom:4px;
+    scrollbar-width:none;
+  }
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;
+    padding:7px 13px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--card);
+    font-size:13px;
+    cursor:pointer;
+    color:var(--muted);
+    white-space:nowrap;
+  }
+  .chip.active{
+    background:var(--ink);
+    color:#fff;
+    border-color:var(--ink);
+  }
+  main{
+    padding:16px;
+    max-width:1100px;
+    margin:0 auto;
+  }
+  .section-title{
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin:22px 4px 10px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:10px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px 12px;
+    text-decoration:none;
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    position:relative;
+    transition:transform .12s, box-shadow .12s;
+    min-height:92px;
+  }
+  .card:active{transform:scale(0.97);}
+  .card-cat-bar{
+    width:26px;
+    height:4px;
+    border-radius:2px;
+  }
+  .card-name{
+    font-size:14.5px;
+    font-weight:600;
+    line-height:1.25;
+  }
+  .card-desc{
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.3;
+    flex:1;
+  }
+  .star-btn{
+    position:absolute;
+    top:8px;
+    right:8px;
+    background:none;
+    border:none;
+    font-size:16px;
+    cursor:pointer;
+    color:#d1cdc2;
+    line-height:1;
+    padding:2px;
+  }
+  .star-btn.fav{color:#d97706;}
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    padding:50px 20px;
+    font-size:14px;
+  }
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+    padding:30px 16px 40px;
+  }
+  .fab{
+    position:fixed;
+    bottom:22px;
+    right:18px;
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    font-size:26px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.25);
+    cursor:pointer;
+    z-index:20;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+  }
+  .fab-secondary{
+    position:fixed;
+    bottom:28px;
+    right:82px;
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:var(--card);
+    border:1px solid var(--border);
+    color:var(--muted);
+    font-size:16px;
+    cursor:pointer;
+    z-index:20;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.45);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:30;
+  }
+  .overlay.open{display:flex;}
+  .sheet{
+    background:var(--bg);
+    width:100%;
+    max-width:480px;
+    border-radius:18px 18px 0 0;
+    padding:20px 18px 28px;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .sheet h2{
+    margin:0 0 4px;
+    font-size:18px;
+  }
+  .sheet .hint{
+    font-size:12.5px;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+  .field{margin-bottom:12px;}
+  .field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    margin-bottom:5px;
+    color:var(--ink);
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    font-size:14.5px;
+    background:var(--card);
+    color:var(--ink);
+    font-family:inherit;
+  }
+  .field textarea{resize:vertical; min-height:50px;}
+  .sheet-actions{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+  }
+  .btn{
+    flex:1;
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    font-size:14.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--ink); color:#fff;}
+  .btn-secondary{background:var(--card); color:var(--ink); border:1px solid var(--border);}
+  .btn:disabled{opacity:0.5;}
+  .status-msg{
+    font-size:13px;
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:9px;
+  }
+  .status-msg.ok{background:#dcfce7; color:#166534;}
+  .status-msg.err{background:#fee2e2; color:#991b1b;}
+  .status-msg.loading{background:#f3f4f6; color:var(--muted);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">PanaMentorLabs · José White</div>
+  <h1>Launchpad</h1>
+  <div class="search-row">
+    <input id="search" type="text" placeholder="Buscar app...">
+  </div>
+  <div class="chips" id="chips"></div>
+</header>
+
+<main>
+  <div id="favSection"></div>
+  <div id="results"></div>
+  <div id="emptyMsg" class="empty" style="display:none;">No se encontró ninguna app con ese criterio.</div>
+</main>
+
+<footer>Cargando apps...</footer>
+
+<button class="fab-secondary" id="settingsBtn" title="Configuración GitHub">⚙️</button>
+<button class="fab" id="addBtn" title="Agregar app">＋</button>
+
+<!-- Modal: agregar app -->
+<div class="overlay" id="addOverlay">
+  <div class="sheet">
+    <h2>Agregar nueva app</h2>
+    <p class="hint">Esto crea un commit directo en tu apps.json en GitHub. Vercel redeploya solo.</p>
+    <div class="field">
+      <label>Nombre</label>
+      <input id="f_name" type="text" placeholder="Ej: Mi Nueva PWA">
+    </div>
+    <div class="field">
+      <label>URL</label>
+      <input id="f_url" type="text" placeholder="https://mi-app.vercel.app/">
+    </div>
+    <div class="field">
+      <label>Categoría</label>
+      <select id="f_cat"></select>
+    </div>
+    <div class="field">
+      <label>Descripción breve (opcional)</label>
+      <textarea id="f_desc" placeholder="Qué hace esta app..."></textarea>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" id="addCancel">Cancelar</button>
+      <button class="btn btn-primary" id="addSave">Guardar en GitHub</button>
+    </div>
+    <div id="addStatus"></div>
+  </div>
+</div>
+
+<!-- Modal: configuración GitHub -->
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <h2>Configuración de GitHub</h2>
+    <p class="hint">Se guarda solo en este dispositivo (localStorage), nunca se sube a ningún repo. Necesitas un <strong>Personal Access Token</strong> (classic, con permiso "repo") creado en GitHub → Settings → Developer settings → Personal access tokens.</p>
+    <div class="field">
+      <label>Usuario u organización</label>
+      <input id="s_owner" type="text" placeholder="josewhite72-beep">
+    </div>
+    <div class="field">
+      <label>Nombre del repositorio</label>
+      <input id="s_repo" type="text" placeholder="app-launchpad">
+    </div>
+    <div class="field">
+      <label>Rama</label>
+      <input id="s_branch" type="text" placeholder="main" value="main">
+    </div>
+    <div class="field">
+      <label>Ruta del archivo</label>
+      <input id="s_path" type="text" placeholder="apps.json" value="apps.json">
+    </div>
+    <div class="field">
+      <label>Token de acceso personal</label>
+      <input id="s_token" type="password" placeholder="ghp_xxxxxxxxxxxx">
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" id="settingsCancel">Cerrar</button>
+      <button class="btn btn-primary" id="settingsSave">Guardar</button>
+    </div>
+    <div id="settingsStatus"></div>
+  </div>
+</div>
+
+<script>
+let DATA = { categories: [], apps: [] };
+let favs = JSON.parse(localStorage.getItem('launchpad_favs') || '[]');
+let activeCat = 'all';
+let ghConfig = JSON.parse(localStorage.getItem('launchpad_gh_config') || '{}');
+let currentSha = null; // sha of apps.json on GitHub, needed to update it
+
+async function loadData(){
+  try{
+    const res = await fetch('apps.json?t=' + Date.now());
+    DATA = await res.json();
+  }catch(e){
+    document.getElementById('results').innerHTML = '<div class="empty">No se pudo cargar apps.json. Verifica que el archivo esté en el mismo repositorio.</div>';
+    return;
+  }
+  document.querySelector('footer').textContent = 'Launchpad — ' + DATA.apps.length + ' apps';
+  buildChips();
+  populateCatSelect();
+  render();
+}
+
+function catColor(catId){
+  const c = DATA.categories.find(c=>c.id===catId);
+  return c ? c.color : '#999';
+}
+function catLabel(catId){
+  const c = DATA.categories.find(c=>c.id===catId);
+  return c ? c.label : catId;
+}
+
+function buildChips(){
+  const chips = document.getElementById('chips');
+  chips.innerHTML = '';
+  const all = document.createElement('div');
+  all.className = 'chip active';
+  all.textContent = 'Todas';
+  all.dataset.cat = 'all';
+  chips.appendChild(all);
+  DATA.categories.forEach(c=>{
+    const el = document.createElement('div');
+    el.className = 'chip';
+    el.textContent = c.label;
+    el.dataset.cat = c.id;
+    chips.appendChild(el);
+  });
+  chips.addEventListener('click', e=>{
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    activeCat = chip.dataset.cat;
+    [...chips.children].forEach(c=>c.classList.toggle('active', c===chip));
+    render();
+  });
+}
+
+function toggleFav(url){
+  if(favs.includes(url)){
+    favs = favs.filter(f=>f!==url);
+  } else {
+    favs.push(url);
+  }
+  localStorage.setItem('launchpad_favs', JSON.stringify(favs));
+  render();
+}
+
+function cardHTML(app){
+  const isFav = favs.includes(app.url);
+  return `<a class="card" href="${app.url}" target="_blank" rel="noopener">
+    <button class="star-btn ${isFav?'fav':''}" data-url="${app.url.replace(/"/g,'&quot;')}" onclick="event.preventDefault();event.stopPropagation();toggleFav(this.dataset.url)">${isFav?'★':'☆'}</button>
+    <div class="card-cat-bar" style="background:${catColor(app.category)}"></div>
+    <div class="card-name">${app.name}</div>
+    <div class="card-desc">${app.desc||''}</div>
+  </a>`;
+}
+
+function render(){
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let apps = DATA.apps.filter(a=>{
+    const matchesCat = activeCat==='all' || a.category===activeCat;
+    const matchesQ = !q || a.name.toLowerCase().includes(q) || (a.desc||'').toLowerCase().includes(q);
+    return matchesCat && matchesQ;
+  });
+
+  const favSection = document.getElementById('favSection');
+  const favApps = apps.filter(a=>favs.includes(a.url));
+  if(favApps.length && !q && activeCat==='all'){
+    favSection.innerHTML = `<div class="section-title">★ Favoritas</div><div class="grid">${favApps.map(cardHTML).join('')}</div>`;
+  } else {
+    favSection.innerHTML = '';
+  }
+
+  const resultsEl = document.getElementById('results');
+  const emptyEl = document.getElementById('emptyMsg');
+
+  if(apps.length===0){
+    resultsEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  if(activeCat!=='all' || q){
+    resultsEl.innerHTML = `<div class="grid">${apps.map(cardHTML).join('')}</div>`;
+    return;
+  }
+
+  // group by category, in category order
+  let html = '';
+  DATA.categories.forEach(c=>{
+    const inCat = apps.filter(a=>a.category===c.id);
+    if(inCat.length===0) return;
+    html += `<div class="section-title">${c.label}</div><div class="grid">${inCat.map(cardHTML).join('')}</div>`;
+  });
+  resultsEl.innerHTML = html;
+}
+
+document.getElementById('search').addEventListener('input', render);
+loadData();
+
+if('serviceWorker' in navigator){
+  const swCode = `
+    const CACHE='launchpad-v1';
+    self.addEventListener('install',e=>self.skipWaiting());
+    self.addEventListener('activate',e=>self.clients.claim());
+    self.addEventListener('fetch',e=>{
+      e.respondWith(
+        fetch(e.request).catch(()=>caches.match(e.request))
+      );
+    });
+  `;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+
+/* ---------- Categoría select para el formulario de nueva app ---------- */
+function populateCatSelect(){
+  const sel = document.getElementById('f_cat');
+  sel.innerHTML = DATA.categories.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+}
+
+/* ---------- Modal: Agregar app ---------- */
+const addOverlay = document.getElementById('addOverlay');
+document.getElementById('addBtn').addEventListener('click', ()=>{
+  document.getElementById('addStatus').innerHTML = '';
+  if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token){
+    document.getElementById('addStatus').innerHTML = '<div class="status-msg err">Primero configura tu GitHub tocando ⚙️</div>';
+  }
+  addOverlay.classList.add('open');
+});
+document.getElementById('addCancel').addEventListener('click', ()=> addOverlay.classList.remove('open'));
+
+document.getElementById('addSave').addEventListener('click', async ()=>{
+  const name = document.getElementById('f_name').value.trim();
+  const url = document.getElementById('f_url').value.trim();
+  const category = document.getElementById('f_cat').value;
+  const desc = document.getElementById('f_desc').value.trim();
+  const statusEl = document.getElementById('addStatus');
+
+  if(!name || !url){
+    statusEl.innerHTML = '<div class="status-msg err">Nombre y URL son obligatorios.</div>';
+    return;
+  }
+  if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token){
+    statusEl.innerHTML = '<div class="status-msg err">Configura GitHub primero (⚙️).</div>';
+    return;
+  }
+
+  statusEl.innerHTML = '<div class="status-msg loading">Guardando en GitHub...</div>';
+  document.getElementById('addSave').disabled = true;
+
+  try{
+    DATA.apps.push({ name, url, category, desc });
+    await saveAppsJsonToGitHub();
+    statusEl.innerHTML = '<div class="status-msg ok">¡Listo! App agregada. Vercel va a redeployar en unos segundos.</div>';
+    document.getElementById('f_name').value = '';
+    document.getElementById('f_url').value = '';
+    document.getElementById('f_desc').value = '';
+    buildChips();
+    render();
+    setTimeout(()=> addOverlay.classList.remove('open'), 1400);
+  }catch(e){
+    DATA.apps.pop(); // revertir en memoria si falló
+    statusEl.innerHTML = '<div class="status-msg err">Error: ' + e.message + '</div>';
+  }finally{
+    document.getElementById('addSave').disabled = false;
+  }
+});
+
+/* ---------- Modal: Configuración GitHub ---------- */
+const settingsOverlay = document.getElementById('settingsOverlay');
+document.getElementById('settingsBtn').addEventListener('click', ()=>{
+  document.getElementById('s_owner').value = ghConfig.owner || '';
+  document.getElementById('s_repo').value = ghConfig.repo || '';
+  document.getElementById('s_branch').value = ghConfig.branch || 'main';
+  document.getElementById('s_path').value = ghConfig.path || 'apps.json';
+  document.getElementById('s_token').value = ghConfig.token || '';
+  document.getElementById('settingsStatus').innerHTML = '';
+  settingsOverlay.classList.add('open');
+});
+document.getElementById('settingsCancel').addEventListener('click', ()=> settingsOverlay.classList.remove('open'));
+
+document.getElementById('settingsSave').addEventListener('click', ()=>{
+  ghConfig = {
+    owner: document.getElementById('s_owner').value.trim(),
+    repo: document.getElementById('s_repo').value.trim(),
+    branch: document.getElementById('s_branch').value.trim() || 'main',
+    path: document.getElementById('s_path').value.trim() || 'apps.json',
+    token: document.getElementById('s_token').value.trim()
+  };
+  localStorage.setItem('launchpad_gh_config', JSON.stringify(ghConfig));
+  document.getElementById('settingsStatus').innerHTML = '<div class="status-msg ok">Configuración guardada en este dispositivo.</div>';
+  setTimeout(()=> settingsOverlay.classList.remove('open'), 1000);
+});
+
+/* ---------- GitHub Contents API: leer sha actual + hacer commit ---------- */
+async function ghHeaders(){
+  return {
+    'Authorization': 'Bearer ' + ghConfig.token,
+    'Accept': 'application/vnd.github+json',
+    'Content-Type': 'application/json'
+  };
+}
+
+function utf8ToBase64(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+async function saveAppsJsonToGitHub(){
+  const apiBase = `https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${ghConfig.path}`;
+
+  // 1. Obtener el sha actual del archivo (requerido por la API para actualizar)
+  const getRes = await fetch(apiBase + '?ref=' + ghConfig.branch, { headers: await ghHeaders() });
+  if(!getRes.ok){
+    throw new Error('No se pudo leer el archivo actual (' + getRes.status + '). Revisa usuario/repo/rama/token.');
+  }
+  const getData = await getRes.json();
+  const sha = getData.sha;
+
+  // 2. Subir el contenido actualizado
+  const newContent = JSON.stringify(DATA, null, 2);
+  const putRes = await fetch(apiBase, {
+    method: 'PUT',
+    headers: await ghHeaders(),
+    body: JSON.stringify({
+      message: 'Agregar app vía Launchpad',
+      content: utf8ToBase64(newContent),
+      sha: sha,
+      branch: ghConfig.branch
+    })
+  });
+  if(!putRes.ok){
+    const errBody = await putRes.json().catch(()=>({}));
+    throw new Error(errBody.message || ('Error al guardar (' + putRes.status + ')'));
+  }
+}
+</script>
+</body>
+</html>
