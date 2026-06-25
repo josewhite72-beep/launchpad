@@ -1,72 +1,367 @@
 {
   "categories": [
-    { "id": "platforms", "label": "Plataformas de Clase", "color": "#2563eb" },
-    { "id": "tools", "label": "Generadores y Herramientas", "color": "#0d9488" },
-    { "id": "games", "label": "Juegos y Aventuras ESL", "color": "#d97706" },
-    { "id": "procurement", "label": "Procurement / FECE", "color": "#7c3aed" },
-    { "id": "nathura", "label": "NathuraVitae", "color": "#16a34a" },
-    { "id": "infra", "label": "Infraestructura / Utilidades", "color": "#64748b" }
+    {
+      "id": "platforms",
+      "label": "Plataformas de Clase",
+      "color": "#2563eb"
+    },
+    {
+      "id": "tools",
+      "label": "Generadores y Herramientas",
+      "color": "#0d9488"
+    },
+    {
+      "id": "games",
+      "label": "Juegos y Aventuras ESL",
+      "color": "#d97706"
+    },
+    {
+      "id": "procurement",
+      "label": "Procurement / FECE",
+      "color": "#7c3aed"
+    },
+    {
+      "id": "nathura",
+      "label": "NathuraVitae",
+      "color": "#16a34a"
+    },
+    {
+      "id": "infra",
+      "label": "Infraestructura / Utilidades",
+      "color": "#64748b"
+    }
   ],
   "apps": [
-    { "name": "Barrigón Classroom", "url": "https://bit.ly/BaClass26", "category": "platforms", "desc": "Google Classroom-style para toda la escuela (Firebase Auth/Firestore)" },
-    { "name": "English Quest School", "url": "https://english-quest-school.vercel.app/", "category": "platforms", "desc": "Aventuras AI por destreza MEDUCA, 101 estudiantes" },
-    { "name": "English Portfolio", "url": "https://english-portfolio-lemon.vercel.app/", "category": "platforms", "desc": "Portafolio de estudiante con dashboard docente" },
-    { "name": "StudyBuddy", "url": "https://studybuddy-dun-sigma.vercel.app/", "category": "platforms", "desc": "Plataforma 5 destrezas (Supabase)" },
-    { "name": "Teach-Know-Link", "url": "https://teach-know-link.vercel.app/", "category": "platforms", "desc": "Vínculo docente-conocimiento" },
-    { "name": "LearnSuite 3", "url": "https://learnsuite-3.preview.emergentagent.com", "category": "platforms", "desc": "Suite de aprendizaje (preview Emergent)" },
-    { "name": "Grading Book", "url": "https://josewhite-grading-book.vercel.app/", "category": "platforms", "desc": "Libro de calificaciones con filtro trimestral" },
-    { "name": "Speak-a-Oke", "url": "https://speak-a-oke.vercel.app/", "category": "platforms", "desc": "Transcripción de habla para práctica oral" },
-    { "name": "Read-a-Oke", "url": "https://read-a-oke.vercel.app/", "category": "platforms", "desc": "Lectura guiada estilo karaoke" },
-    { "name": "Skill Trainer", "url": "https://skill-trainer-amber.vercel.app/", "category": "platforms", "desc": "Entrenador de destrezas ESL" },
-
-    { "name": "GeMA (Módulos Autoinstrucción)", "url": "https://generador-modulos-autoinstruccion.vercel.app/", "category": "tools", "desc": "Genera módulos de autoinstrucción desde planes de clase" },
-    { "name": "Print Ok", "url": "https://print-ok.vercel.app/", "category": "tools", "desc": "Formateador de folletos/trípticos para imprimir" },
-    { "name": "Lesson Gamifier", "url": "https://lesson-gamifier.vercel.app/", "category": "tools", "desc": "Convierte planes de clase en juegos interactivos" },
-    { "name": "Lesson Plan Fixer", "url": "https://lesson-plan-fixxer.vercel.app/", "category": "tools", "desc": "Genera 5 planificadores diferenciados por destreza" },
-    { "name": "GPG - Presentaciones", "url": "https://general-presentations-gen.vercel.app/", "category": "tools", "desc": "Generador de presentaciones estilo Prezi" },
-    { "name": "Generador SVG / Ilustrador Vocab", "url": "https://svg-generator-self.vercel.app/", "category": "tools", "desc": "Ilustraciones de vocabulario con IA" },
-    { "name": "WS Illustrator", "url": "https://josewhite72-beep.github.io/ws-illustrator/", "category": "tools", "desc": "Ilustrador de hojas de trabajo" },
-    { "name": "Generador de Instrumentos (Multiestudiante)", "url": "https://generador-instrumentos-multiestudia-three.vercel.app/", "category": "tools", "desc": "Instrumentos de evaluación multi-estudiante" },
-    { "name": "Creador de Instrumentos de Evaluación", "url": "https://josewhite72-beep.github.io/creador_instrumentos_evaluacion/", "category": "tools", "desc": "Versión GitHub Pages del creador de instrumentos" },
-    { "name": "Files to Markdown", "url": "https://files-to-markdown.vercel.app/", "category": "tools", "desc": "Convierte documentos a Markdown (reduce costos de tokens)" },
-    { "name": "Plan Parser", "url": "https://plan-parser.vercel.app/", "category": "tools", "desc": "Parser de planeamiento (compañero de Comic Creator)" },
-    { "name": "Comic Book Creator", "url": "https://comic-creator-ten.vercel.app/", "category": "tools", "desc": "Crea cómics desde planes de clase" },
-    { "name": "Story Illustrator", "url": "https://story-illustrator.vercel.app/", "category": "tools", "desc": "Ilustrador de historias" },
-    { "name": "Pana Mentor Story Genie Plus", "url": "https://pana-mentor-story-genie-plus.vercel.app/", "category": "tools", "desc": "Generador de historias (versión Plus)" },
-    { "name": "Pana Mentor Labs Story Genie", "url": "https://pana-mentor-labs-story-genie.vercel.app/", "category": "tools", "desc": "Generador de historias (versión original)" },
-    { "name": "Plan to Worksheets", "url": "https://plan-2-worksheets.vercel.app/", "category": "tools", "desc": "Convierte planes en hojas de trabajo" },
-    { "name": "Planificación Didáctica Express", "url": "https://planificacion-didactica-express-zdf.vercel.app/", "category": "tools", "desc": "Planificación didáctica rápida" },
-    { "name": "21st Century Projects Gen", "url": "https://21st-century-projects-gen.vercel.app/", "category": "tools", "desc": "Proyectos interdisciplinarios MEDUCA" },
-    { "name": "Cuaderno Único Docente Plus", "url": "https://cuaderno-unico-docente-plus.vercel.app/", "category": "tools", "desc": "Cuaderno único del docente" },
-    { "name": "Planning Progress Pilot 2", "url": "https://planning-progress-pilot2.vercel.app/", "category": "tools", "desc": "Piloto de seguimiento de planificación" },
-    { "name": "Activities by Skills Agent 26", "url": "https://activities-by-skills-agent-26.vercel.app/", "category": "tools", "desc": "Agente generador de actividades por destreza (AOA)" },
-    { "name": "Activities by Skills", "url": "https://activities-by-skills.netlify.app", "category": "tools", "desc": "Generador de actividades por destreza (Netlify)" },
-    { "name": "Teachers Planning App", "url": "https://teachersplanningapp.netlify.app/", "category": "tools", "desc": "App de planificación docente (Netlify)" },
-    { "name": "English Lessons Planner App", "url": "https://english-lessons-planner-app.vercel.app/", "category": "tools", "desc": "Planificador de lecciones de inglés" },
-    { "name": "English Teachers Planner v4.1", "url": "https://english-teachers-planner-v4-1.vercel.app/", "category": "tools", "desc": "Planificador docente, versión 4.1" },
-    { "name": "Planner Viewer", "url": "https://planner-viewer.vercel.app/", "category": "tools", "desc": "Visor de planificaciones" },
-    { "name": "English Resources Finder", "url": "https://josewhite-englishresources-finder.netlify.app/", "category": "tools", "desc": "Buscador de recursos de inglés" },
-    { "name": "Crea Barrigón v2", "url": "https://crea-barrigon-v2.vercel.app/", "category": "tools", "desc": "Creador de contenido Barrigón v2" },
-    { "name": "Z10 Tutor", "url": "https://z10-tutor.vercel.app/", "category": "tools", "desc": "Tutor Z10" },
-    { "name": "EQ Proxy", "url": "https://eq-proxy.vercel.app/", "category": "infra", "desc": "Proxy serverless para English Quest" },
-    { "name": "ESL Activities Manager", "url": "https://josewhite72-beep.github.io/esl_activities_manager/", "category": "tools", "desc": "Gestor de actividades ESL" },
-
-    { "name": "Wordingtown Castle", "url": "https://wordingtown-castle.vercel.app/", "category": "games", "desc": "RPG Wordingtown - Castillo" },
-    { "name": "Grammar Jumper", "url": "https://grammar-jumper.netlify.app/", "category": "games", "desc": "Juego de gramática tipo plataformas" },
-    { "name": "Sentence Snake", "url": "https://josewhite72-beep.github.io/Sentence-Snake/", "category": "games", "desc": "Juego de construcción de oraciones" },
-    { "name": "Capibara Snake 2", "url": "https://josewhite72-beep.github.io/Capibara-Snake-2/", "category": "games", "desc": "Snake temático Capibara, v2" },
-    { "name": "Barrigón Adventure", "url": "https://barrigon-adventure.vercel.app/", "category": "games", "desc": "Aventura interactiva Barrigón" },
-    { "name": "English Adventure", "url": "https://josewhite72-beep.github.io/english_adventure/", "category": "games", "desc": "Aventura de inglés (GitHub Pages)" },
-
-    { "name": "CompraConsultor", "url": "https://compra-consultor.vercel.app/", "category": "procurement", "desc": "Asistente legal de procurement (RAG-lite, leyes de Panamá)" },
-    { "name": "CompraFácil", "url": "https://agente-cotizador.vercel.app/", "category": "procurement", "desc": "PWA de procurement escolar vía PanamaCompra (FECE)" },
-
-    { "name": "NathuraVitae", "url": "https://nathura-vitae.vercel.app/", "category": "nathura", "desc": "120+ plantas medicinales de Panamá y el Caribe" },
-    { "name": "Talking Book Generator", "url": "https://nathura-vitae.vercel.app/talking-book-generator.html", "category": "nathura", "desc": "Generador de libros parlantes NathuraVitae" },
-    { "name": "Talking Book (standalone)", "url": "https://talking-book.vercel.app/", "category": "nathura", "desc": "Versión independiente del Talking Book" },
-
-    { "name": "App Audit", "url": "https://josewhite72-beep.github.io/app-audit/", "category": "infra", "desc": "Auditoría de proyectos HTML en Android" },
-    { "name": "Clear PWA", "url": "https://josewhite72-beep.github.io/clear_pwa/", "category": "infra", "desc": "Utilidad para limpiar caché de PWAs" },
-    { "name": "App Launcher (prototipo previo)", "url": "https://app-launcher-jade.vercel.app/", "category": "infra", "desc": "Intento anterior de launchpad — revisar si reemplazar" }
+    {
+      "name": "Barrigón Classroom",
+      "url": "https://bit.ly/BaClass26",
+      "icon": "data:image/png;base64,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",
+      "category": "platforms",
+      "desc": "Google Classroom-style para toda la escuela (Firebase Auth/Firestore)"
+    },
+    {
+      "name": "English Quest School",
+      "url": "https://english-quest-school.vercel.app/",
+      "category": "platforms",
+      "desc": "Aventuras AI por destreza MEDUCA, 101 estudiantes"
+    },
+    {
+      "name": "English Portfolio",
+      "url": "https://english-portfolio-lemon.vercel.app/",
+      "category": "platforms",
+      "desc": "Portafolio de estudiante con dashboard docente"
+    },
+    {
+      "name": "StudyBuddy",
+      "url": "https://studybuddy-dun-sigma.vercel.app/",
+      "category": "platforms",
+      "desc": "Plataforma 5 destrezas (Supabase)"
+    },
+    {
+      "name": "Teach-Know-Link",
+      "url": "https://teach-know-link.vercel.app/",
+      "category": "platforms",
+      "desc": "Vínculo docente-conocimiento"
+    },
+    {
+      "name": "LearnSuite 3",
+      "url": "https://learnsuite-3.preview.emergentagent.com",
+      "category": "platforms",
+      "desc": "Suite de aprendizaje (preview Emergent)"
+    },
+    {
+      "name": "Grading Book",
+      "url": "https://josewhite-grading-book.vercel.app/",
+      "category": "platforms",
+      "desc": "Libro de calificaciones con filtro trimestral"
+    },
+    {
+      "name": "Speak-a-Oke",
+      "url": "https://speak-a-oke.vercel.app/",
+      "category": "platforms",
+      "desc": "Transcripción de habla para práctica oral"
+    },
+    {
+      "name": "Read-a-Oke",
+      "url": "https://read-a-oke.vercel.app/",
+      "category": "platforms",
+      "desc": "Lectura guiada estilo karaoke"
+    },
+    {
+      "name": "Skill Trainer",
+      "url": "https://skill-trainer-amber.vercel.app/",
+      "category": "platforms",
+      "desc": "Entrenador de destrezas ESL"
+    },
+    {
+      "name": "GeMA (Módulos Autoinstrucción)",
+      "url": "https://generador-modulos-autoinstruccion.vercel.app/",
+      "category": "tools",
+      "desc": "Genera módulos de autoinstrucción desde planes de clase"
+    },
+    {
+      "name": "Print Ok",
+      "url": "https://print-ok.vercel.app/",
+      "category": "tools",
+      "desc": "Formateador de folletos/trípticos para imprimir"
+    },
+    {
+      "name": "Lesson Gamifier",
+      "url": "https://lesson-gamifier.vercel.app/",
+      "category": "tools",
+      "desc": "Convierte planes de clase en juegos interactivos"
+    },
+    {
+      "name": "Lesson Plan Fixer",
+      "url": "https://lesson-plan-fixxer.vercel.app/",
+      "category": "tools",
+      "desc": "Genera 5 planificadores diferenciados por destreza"
+    },
+    {
+      "name": "GPG - Presentaciones",
+      "url": "https://general-presentations-gen.vercel.app/",
+      "category": "tools",
+      "desc": "Generador de presentaciones estilo Prezi"
+    },
+    {
+      "name": "Generador SVG / Ilustrador Vocab",
+      "url": "https://svg-generator-self.vercel.app/",
+      "category": "tools",
+      "desc": "Ilustraciones de vocabulario con IA"
+    },
+    {
+      "name": "WS Illustrator",
+      "url": "https://josewhite72-beep.github.io/ws-illustrator/",
+      "category": "tools",
+      "desc": "Ilustrador de hojas de trabajo"
+    },
+    {
+      "name": "Generador de Instrumentos (Multiestudiante)",
+      "url": "https://generador-instrumentos-multiestudia-three.vercel.app/",
+      "category": "tools",
+      "desc": "Instrumentos de evaluación multi-estudiante"
+    },
+    {
+      "name": "Creador de Instrumentos de Evaluación",
+      "url": "https://josewhite72-beep.github.io/creador_instrumentos_evaluacion/",
+      "category": "tools",
+      "desc": "Versión GitHub Pages del creador de instrumentos"
+    },
+    {
+      "name": "Files to Markdown",
+      "url": "https://files-to-markdown.vercel.app/",
+      "category": "tools",
+      "desc": "Convierte documentos a Markdown (reduce costos de tokens)"
+    },
+    {
+      "name": "Plan Parser",
+      "url": "https://plan-parser.vercel.app/",
+      "category": "tools",
+      "desc": "Parser de planeamiento (compañero de Comic Creator)"
+    },
+    {
+      "name": "Comic Book Creator",
+      "url": "https://comic-creator-ten.vercel.app/",
+      "category": "tools",
+      "desc": "Crea cómics desde planes de clase"
+    },
+    {
+      "name": "Story Illustrator",
+      "url": "https://story-illustrator.vercel.app/",
+      "category": "tools",
+      "desc": "Ilustrador de historias"
+    },
+    {
+      "name": "Pana Mentor Story Genie Plus",
+      "url": "https://pana-mentor-story-genie-plus.vercel.app/",
+      "category": "tools",
+      "desc": "Generador de historias (versión Plus)"
+    },
+    {
+      "name": "Pana Mentor Labs Story Genie",
+      "url": "https://pana-mentor-labs-story-genie.vercel.app/",
+      "category": "tools",
+      "desc": "Generador de historias (versión original)"
+    },
+    {
+      "name": "Plan to Worksheets",
+      "url": "https://plan-2-worksheets.vercel.app/",
+      "category": "tools",
+      "desc": "Convierte planes en hojas de trabajo"
+    },
+    {
+      "name": "Planificación Didáctica Express",
+      "url": "https://planificacion-didactica-express-zdf.vercel.app/",
+      "category": "tools",
+      "desc": "Planificación didáctica rápida"
+    },
+    {
+      "name": "21st Century Projects Gen",
+      "url": "https://21st-century-projects-gen.vercel.app/",
+      "category": "tools",
+      "desc": "Proyectos interdisciplinarios MEDUCA"
+    },
+    {
+      "name": "Cuaderno Único Docente Plus",
+      "url": "https://cuaderno-unico-docente-plus.vercel.app/",
+      "category": "tools",
+      "desc": "Cuaderno único del docente"
+    },
+    {
+      "name": "Planning Progress Pilot 2",
+      "url": "https://planning-progress-pilot2.vercel.app/",
+      "category": "tools",
+      "desc": "Piloto de seguimiento de planificación"
+    },
+    {
+      "name": "Activities by Skills Agent 26",
+      "url": "https://activities-by-skills-agent-26.vercel.app/",
+      "category": "tools",
+      "desc": "Agente generador de actividades por destreza (AOA)"
+    },
+    {
+      "name": "Activities by Skills",
+      "url": "https://activities-by-skills.netlify.app",
+      "category": "tools",
+      "desc": "Generador de actividades por destreza (Netlify)"
+    },
+    {
+      "name": "Teachers Planning App",
+      "url": "https://teachersplanningapp.netlify.app/",
+      "category": "tools",
+      "desc": "App de planificación docente (Netlify)"
+    },
+    {
+      "name": "English Lessons Planner App",
+      "url": "https://english-lessons-planner-app.vercel.app/",
+      "category": "tools",
+      "desc": "Planificador de lecciones de inglés"
+    },
+    {
+      "name": "English Teachers Planner v4.1",
+      "url": "https://english-teachers-planner-v4-1.vercel.app/",
+      "category": "tools",
+      "desc": "Planificador docente, versión 4.1"
+    },
+    {
+      "name": "Planner Viewer",
+      "url": "https://planner-viewer.vercel.app/",
+      "category": "tools",
+      "desc": "Visor de planificaciones"
+    },
+    {
+      "name": "English Resources Finder",
+      "url": "https://josewhite-englishresources-finder.netlify.app/",
+      "category": "tools",
+      "desc": "Buscador de recursos de inglés"
+    },
+    {
+      "name": "Crea Barrigón v2",
+      "url": "https://crea-barrigon-v2.vercel.app/",
+      "category": "tools",
+      "desc": "Creador de contenido Barrigón v2"
+    },
+    {
+      "name": "Z10 Tutor",
+      "url": "https://z10-tutor.vercel.app/",
+      "category": "tools",
+      "desc": "Tutor Z10"
+    },
+    {
+      "name": "EQ Proxy",
+      "url": "https://eq-proxy.vercel.app/",
+      "category": "infra",
+      "desc": "Proxy serverless para English Quest"
+    },
+    {
+      "name": "ESL Activities Manager",
+      "url": "https://josewhite72-beep.github.io/esl_activities_manager/",
+      "category": "tools",
+      "desc": "Gestor de actividades ESL"
+    },
+    {
+      "name": "Wordingtown Castle",
+      "url": "https://wordingtown-castle.vercel.app/",
+      "category": "games",
+      "desc": "RPG Wordingtown - Castillo"
+    },
+    {
+      "name": "Grammar Jumper",
+      "url": "https://grammar-jumper.netlify.app/",
+      "category": "games",
+      "desc": "Juego de gramática tipo plataformas"
+    },
+    {
+      "name": "Sentence Snake",
+      "url": "https://josewhite72-beep.github.io/Sentence-Snake/",
+      "category": "games",
+      "desc": "Juego de construcción de oraciones"
+    },
+    {
+      "name": "Capibara Snake 2",
+      "url": "https://josewhite72-beep.github.io/Capibara-Snake-2/",
+      "category": "games",
+      "desc": "Snake temático Capibara, v2"
+    },
+    {
+      "name": "Barrigón Adventure",
+      "url": "https://barrigon-adventure.vercel.app/",
+      "category": "games",
+      "desc": "Aventura interactiva Barrigón"
+    },
+    {
+      "name": "English Adventure",
+      "url": "https://josewhite72-beep.github.io/english_adventure/",
+      "category": "games",
+      "desc": "Aventura de inglés (GitHub Pages)"
+    },
+    {
+      "name": "CompraConsultor",
+      "url": "https://compra-consultor.vercel.app/",
+      "category": "procurement",
+      "desc": "Asistente legal de procurement (RAG-lite, leyes de Panamá)"
+    },
+    {
+      "name": "CompraFácil",
+      "url": "https://agente-cotizador.vercel.app/",
+      "category": "procurement",
+      "desc": "PWA de procurement escolar vía PanamaCompra (FECE)"
+    },
+    {
+      "name": "NathuraVitae",
+      "url": "https://nathura-vitae.vercel.app/",
+      "category": "nathura",
+      "desc": "120+ plantas medicinales de Panamá y el Caribe"
+    },
+    {
+      "name": "Talking Book Generator",
+      "url": "https://nathura-vitae.vercel.app/talking-book-generator.html",
+      "category": "nathura",
+      "desc": "Generador de libros parlantes NathuraVitae"
+    },
+    {
+      "name": "Talking Book (standalone)",
+      "url": "https://talking-book.vercel.app/",
+      "category": "nathura",
+      "desc": "Versión independiente del Talking Book"
+    },
+    {
+      "name": "App Audit",
+      "url": "https://josewhite72-beep.github.io/app-audit/",
+      "category": "infra",
+      "desc": "Auditoría de proyectos HTML en Android"
+    },
+    {
+      "name": "Clear PWA",
+      "url": "https://josewhite72-beep.github.io/clear_pwa/",
+      "category": "infra",
+      "desc": "Utilidad para limpiar caché de PWAs"
+    },
+    {
+      "name": "App Launcher (prototipo previo)",
+      "url": "https://app-launcher-jade.vercel.app/",
+      "category": "infra",
+      "desc": "Intento anterior de launchpad — revisar si reemplazar"
+    }
   ]
 }
