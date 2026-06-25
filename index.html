@@ -7,26 +7,29 @@
 <link rel="manifest" href="data:application/json,{%22name%22:%22Launchpad%22,%22short_name%22:%22Launchpad%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23faf8f4%22,%22theme_color%22:%22%231f2937%22}">
 <style>
   :root{
-    --bg:#faf8f4;
+    --bg:#eef7f3;
     --ink:#1f2937;
-    --muted:#6b7280;
+    --muted:#5b6b72;
     --card:#ffffff;
-    --border:#e7e2d8;
+    --border:#d8e8e2;
     --accent:#1f2937;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
     font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-    background:var(--bg);
+    background:linear-gradient(165deg, #2bcf9a 0%, #2f8fae 38%, #3a6f9c 65%, #44507a 100%);
+    background-attachment:fixed;
     color:var(--ink);
     -webkit-tap-highlight-color:transparent;
+    min-height:100vh;
   }
   header{
     padding:20px 16px 14px;
     position:sticky;
     top:0;
-    background:var(--bg);
+    background:rgba(238,247,243,0.92);
+    backdrop-filter:blur(6px);
     z-index:10;
     border-bottom:1px solid var(--border);
   }
@@ -69,17 +72,20 @@
     flex:0 0 auto;
     padding:7px 13px;
     border-radius:999px;
-    border:1px solid var(--border);
-    background:var(--card);
+    border:1.5px solid var(--chip-color, var(--border));
+    background:#fff;
     font-size:13px;
+    font-weight:600;
     cursor:pointer;
-    color:var(--muted);
+    color:var(--chip-color, var(--muted));
     white-space:nowrap;
+    transition:background .15s, color .15s;
   }
   .chip.active{
-    background:var(--ink);
+    background:var(--chip-color, var(--ink));
     color:#fff;
-    border-color:var(--ink);
+    border-color:var(--chip-color, var(--ink));
+    box-shadow:0 2px 8px -2px var(--chip-color, rgba(0,0,0,0.3));
   }
   main{
     padding:16px;
@@ -100,9 +106,10 @@
     gap:10px;
   }
   .card{
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:12px;
+    background:
+      linear-gradient(155deg, rgba(255,255,255,0.85) 0%, var(--card-tint, #fff) 100%);
+    border:1px solid var(--card-border, var(--border));
+    border-radius:14px;
     padding:14px 12px;
     text-decoration:none;
     color:var(--ink);
@@ -112,12 +119,49 @@
     position:relative;
     transition:transform .12s, box-shadow .12s;
     min-height:92px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.9),
+      inset 0 -2px 4px rgba(0,0,0,0.05),
+      0 3px 6px -2px rgba(0,0,0,0.12),
+      0 1px 2px rgba(0,0,0,0.06);
   }
-  .card:active{transform:scale(0.97);}
+  .card:active{
+    transform:scale(0.97) translateY(1px);
+    box-shadow:
+      inset 0 1px 3px rgba(0,0,0,0.12),
+      0 1px 2px rgba(0,0,0,0.08);
+  }
   .card-cat-bar{
     width:26px;
     height:4px;
     border-radius:2px;
+    box-shadow:0 1px 1px rgba(0,0,0,0.15);
+  }
+  .card-icon{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    background:var(--card-tint, #fff);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.8),
+      inset 0 -1px 2px rgba(0,0,0,0.08),
+      0 1px 2px rgba(0,0,0,0.12);
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .card-icon img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .card-top-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
   }
   .card-name{
     font-size:14.5px;
@@ -131,16 +175,28 @@
     flex:1;
   }
   .star-btn{
-    position:absolute;
-    top:8px;
-    right:8px;
     background:none;
     border:none;
-    font-size:16px;
+    font-size:18px;
     cursor:pointer;
-    color:#d1cdc2;
+    color:#c9d6cf;
     line-height:1;
     padding:2px;
+    flex-shrink:0;
+  }
+  .edit-btn{
+    background:none;
+    border:none;
+    font-size:14px;
+    cursor:pointer;
+    color:#c9d6cf;
+    line-height:1;
+    padding:2px 2px 2px 4px;
+    flex-shrink:0;
+  }
+  .card-actions{
+    display:flex;
+    align-items:center;
   }
   .star-btn.fav{color:#d97706;}
   .empty{
@@ -264,6 +320,52 @@
   .status-msg.ok{background:#dcfce7; color:#166534;}
   .status-msg.err{background:#fee2e2; color:#991b1b;}
   .status-msg.loading{background:#f3f4f6; color:var(--muted);}
+  .icon-picker-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .icon-preview{
+    width:42px;
+    height:42px;
+    border-radius:10px;
+    background:var(--card);
+    border:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    flex-shrink:0;
+    overflow:hidden;
+    color:var(--muted);
+  }
+  .icon-preview img{width:100%;height:100%;object-fit:cover;}
+  .icon-choice-btn{
+    padding:9px 12px;
+    border-radius:9px;
+    border:1px solid var(--border);
+    background:var(--card);
+    font-size:13px;
+    cursor:pointer;
+    color:var(--ink);
+    flex:1;
+  }
+  .emoji-grid{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:6px;
+    max-height:260px;
+    overflow-y:auto;
+    margin:14px 0;
+  }
+  .emoji-grid button{
+    font-size:24px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:8px 0;
+    cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -302,6 +404,16 @@
       <input id="f_url" type="text" placeholder="https://mi-app.vercel.app/">
     </div>
     <div class="field">
+      <label>Ícono</label>
+      <div class="icon-picker-row" id="f_icon_row">
+        <div class="icon-preview" id="f_icon_preview">＋</div>
+        <button type="button" class="icon-choice-btn" onclick="openEmojiPicker('f_icon')">😀 Emoji</button>
+        <button type="button" class="icon-choice-btn" onclick="document.getElementById('f_icon_file').click()">🖼️ Importar</button>
+        <input type="file" id="f_icon_file" accept="image/*" style="display:none">
+      </div>
+      <input type="hidden" id="f_icon">
+    </div>
+    <div class="field">
       <label>Categoría</label>
       <select id="f_cat"></select>
     </div>
@@ -317,6 +429,55 @@
   </div>
 </div>
 
+<!-- Modal: selector de emoji -->
+<div class="overlay" id="emojiOverlay">
+  <div class="sheet">
+    <h2>Elige un emoji</h2>
+    <div class="emoji-grid" id="emojiGrid"></div>
+    <button class="btn btn-secondary" id="emojiCancel" style="width:100%;">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal: editar app existente -->
+<div class="overlay" id="editOverlay">
+  <div class="sheet">
+    <h2>Editar app</h2>
+    <p class="hint">Los cambios se guardan directo en tu apps.json en GitHub.</p>
+    <div class="field">
+      <label>Nombre</label>
+      <input id="e_name" type="text">
+    </div>
+    <div class="field">
+      <label>URL</label>
+      <input id="e_url" type="text">
+    </div>
+    <div class="field">
+      <label>Ícono</label>
+      <div class="icon-picker-row" id="e_icon_row">
+        <div class="icon-preview" id="e_icon_preview">＋</div>
+        <button type="button" class="icon-choice-btn" onclick="openEmojiPicker('e_icon')">😀 Emoji</button>
+        <button type="button" class="icon-choice-btn" onclick="document.getElementById('e_icon_file').click()">🖼️ Importar</button>
+        <input type="file" id="e_icon_file" accept="image/*" style="display:none">
+      </div>
+      <input type="hidden" id="e_icon">
+    </div>
+    <div class="field">
+      <label>Categoría</label>
+      <select id="e_cat"></select>
+    </div>
+    <div class="field">
+      <label>Descripción breve</label>
+      <textarea id="e_desc"></textarea>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" id="editCancel">Cancelar</button>
+      <button class="btn btn-primary" id="editSave">Guardar cambios</button>
+    </div>
+    <button class="btn" id="editDelete" style="background:#fee2e2;color:#991b1b;margin-top:10px;width:100%;">Eliminar esta app</button>
+    <div id="editStatus"></div>
+  </div>
+</div>
+
 <!-- Modal: configuración GitHub -->
 <div class="overlay" id="settingsOverlay">
   <div class="sheet">
@@ -324,19 +485,19 @@
     <p class="hint">Se guarda solo en este dispositivo (localStorage), nunca se sube a ningún repo. Necesitas un <strong>Personal Access Token</strong> (classic, con permiso "repo") creado en GitHub → Settings → Developer settings → Personal access tokens.</p>
     <div class="field">
       <label>Usuario u organización</label>
-      <input id="s_owner" type="text" placeholder="josewhite72-beep">
+      <input id="s_owner" type="text" placeholder="Escribe tu usuario de GitHub aquí">
     </div>
     <div class="field">
       <label>Nombre del repositorio</label>
-      <input id="s_repo" type="text" placeholder="app-launchpad">
+      <input id="s_repo" type="text" placeholder="Escribe el nombre del repo aquí">
     </div>
     <div class="field">
       <label>Rama</label>
-      <input id="s_branch" type="text" placeholder="main" value="main">
+      <input id="s_branch" type="text" placeholder="Ej: main">
     </div>
     <div class="field">
       <label>Ruta del archivo</label>
-      <input id="s_path" type="text" placeholder="apps.json" value="apps.json">
+      <input id="s_path" type="text" placeholder="Ej: apps.json">
     </div>
     <div class="field">
       <label>Token de acceso personal</label>
@@ -380,6 +541,22 @@ function catLabel(catId){
   return c ? c.label : catId;
 }
 
+// Mezcla un color hex con blanco para producir un tinte pastel (0 = igual al original, 1 = blanco puro)
+function mixWithWhite(hex, ratio){
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16);
+  const g = parseInt(h.substring(2,4),16);
+  const b = parseInt(h.substring(4,6),16);
+  const mix = (c)=> Math.round(c + (255-c)*ratio);
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+}
+function catPastelBg(catId){
+  return mixWithWhite(catColor(catId), 0.82);
+}
+function catPastelBorder(catId){
+  return mixWithWhite(catColor(catId), 0.45);
+}
+
 function buildChips(){
   const chips = document.getElementById('chips');
   chips.innerHTML = '';
@@ -393,6 +570,7 @@ function buildChips(){
     el.className = 'chip';
     el.textContent = c.label;
     el.dataset.cat = c.id;
+    el.style.setProperty('--chip-color', c.color);
     chips.appendChild(el);
   });
   chips.addEventListener('click', e=>{
@@ -414,11 +592,32 @@ function toggleFav(url){
   render();
 }
 
-function cardHTML(app){
+function iconHTML(app){
+  const icon = (app.icon || '').trim();
+  const looksLikeImagePath = /^https?:\/\//.test(icon) || /^data:image/.test(icon) || /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(icon);
+  if(looksLikeImagePath){
+    return `<img src="${icon}" alt="" loading="lazy" onerror="this.parentElement.textContent='${(app.name||'?').trim().charAt(0).toUpperCase()}';">`;
+  }
+  if(icon){
+    return icon; // emoji u otro carácter corto
+  }
+  // fallback: inicial del nombre sobre color de categoría
+  const initial = (app.name||'?').trim().charAt(0).toUpperCase();
+  return `<span style="color:${catColor(app.category)}; font-weight:700;">${initial}</span>`;
+}
+
+function cardHTML(app, idx){
   const isFav = favs.includes(app.url);
-  return `<a class="card" href="${app.url}" target="_blank" rel="noopener">
-    <button class="star-btn ${isFav?'fav':''}" data-url="${app.url.replace(/"/g,'&quot;')}" onclick="event.preventDefault();event.stopPropagation();toggleFav(this.dataset.url)">${isFav?'★':'☆'}</button>
-    <div class="card-cat-bar" style="background:${catColor(app.category)}"></div>
+  const tint = catPastelBg(app.category);
+  const border = catPastelBorder(app.category);
+  return `<a class="card" style="--card-tint:${tint}; --card-border:${border};" href="${app.url}" target="_blank" rel="noopener">
+    <div class="card-top-row">
+      <div class="card-icon">${iconHTML(app)}</div>
+      <div class="card-actions">
+        <button class="edit-btn" data-url="${app.url.replace(/"/g,'&quot;')}" onclick="event.preventDefault();event.stopPropagation();openEdit(this.dataset.url)">✏️</button>
+        <button class="star-btn ${isFav?'fav':''}" data-url="${app.url.replace(/"/g,'&quot;')}" onclick="event.preventDefault();event.stopPropagation();toggleFav(this.dataset.url)">${isFav?'★':'☆'}</button>
+      </div>
+    </div>
     <div class="card-name">${app.name}</div>
     <div class="card-desc">${app.desc||''}</div>
   </a>`;
@@ -489,10 +688,80 @@ function populateCatSelect(){
   sel.innerHTML = DATA.categories.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
 }
 
+/* ---------- Selector de ícono: emoji o imagen importada ---------- */
+const EMOJI_OPTIONS = [
+  '📚','📝','🎓','🏫','🧮','🔬','🎨','🎭','🎮','🕹️','🧩','🃏',
+  '🐍','🐸','🦊','🐢','🦜','🐯','🤖','👾','🚀','🛡️','⚔️','🏰',
+  '🗣️','💬','🎙️','🎧','📖','📓','📋','✏️','🖊️','🖍️','📊','📈',
+  '🗂️','📁','🧾','💼','💰','🧰','🔧','⚙️','🛒','🧪','🌿','🍃',
+  '🌱','💊','📷','🖼️','🎬','📺','🧠','⭐','🎯','🏆','📅','🔔'
+];
+let emojiTargetInputId = null;
+
+function buildEmojiGrid(){
+  const grid = document.getElementById('emojiGrid');
+  grid.innerHTML = EMOJI_OPTIONS.map(e=>`<button type="button" onclick="pickEmoji('${e}')">${e}</button>`).join('');
+}
+function openEmojiPicker(targetInputId){
+  emojiTargetInputId = targetInputId;
+  buildEmojiGrid();
+  document.getElementById('emojiOverlay').classList.add('open');
+}
+function pickEmoji(emoji){
+  setIconValue(emojiTargetInputId, emoji);
+  document.getElementById('emojiOverlay').classList.remove('open');
+}
+document.getElementById('emojiCancel').addEventListener('click', ()=>{
+  document.getElementById('emojiOverlay').classList.remove('open');
+});
+
+function setIconValue(inputId, value){
+  document.getElementById(inputId).value = value;
+  const preview = document.getElementById(inputId + '_preview');
+  if(!preview) return;
+  if(/^data:image/.test(value) || /^https?:\/\//.test(value)){
+    preview.innerHTML = `<img src="${value}" alt="">`;
+  } else if(value){
+    preview.textContent = value;
+  } else {
+    preview.textContent = '＋';
+  }
+}
+
+function handleIconFile(inputId, file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const maxSize = 128;
+      let { width, height } = img;
+      if(width > height){
+        if(width > maxSize){ height = Math.round(height * maxSize/width); width = maxSize; }
+      } else {
+        if(height > maxSize){ width = Math.round(width * maxSize/height); height = maxSize; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL('image/png');
+      setIconValue(inputId, dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('f_icon_file').addEventListener('change', (e)=> handleIconFile('f_icon', e.target.files[0]));
+document.getElementById('e_icon_file').addEventListener('change', (e)=> handleIconFile('e_icon', e.target.files[0]));
+
 /* ---------- Modal: Agregar app ---------- */
 const addOverlay = document.getElementById('addOverlay');
 document.getElementById('addBtn').addEventListener('click', ()=>{
   document.getElementById('addStatus').innerHTML = '';
+  setIconValue('f_icon', '');
   if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token){
     document.getElementById('addStatus').innerHTML = '<div class="status-msg err">Primero configura tu GitHub tocando ⚙️</div>';
   }
@@ -503,6 +772,7 @@ document.getElementById('addCancel').addEventListener('click', ()=> addOverlay.c
 document.getElementById('addSave').addEventListener('click', async ()=>{
   const name = document.getElementById('f_name').value.trim();
   const url = document.getElementById('f_url').value.trim();
+  const icon = document.getElementById('f_icon').value.trim();
   const category = document.getElementById('f_cat').value;
   const desc = document.getElementById('f_desc').value.trim();
   const statusEl = document.getElementById('addStatus');
@@ -520,11 +790,12 @@ document.getElementById('addSave').addEventListener('click', async ()=>{
   document.getElementById('addSave').disabled = true;
 
   try{
-    DATA.apps.push({ name, url, category, desc });
+    DATA.apps.push({ name, url, category, desc, icon });
     await saveAppsJsonToGitHub();
     statusEl.innerHTML = '<div class="status-msg ok">¡Listo! App agregada. Vercel va a redeployar en unos segundos.</div>';
     document.getElementById('f_name').value = '';
     document.getElementById('f_url').value = '';
+    setIconValue('f_icon', '');
     document.getElementById('f_desc').value = '';
     buildChips();
     render();
@@ -534,6 +805,98 @@ document.getElementById('addSave').addEventListener('click', async ()=>{
     statusEl.innerHTML = '<div class="status-msg err">Error: ' + e.message + '</div>';
   }finally{
     document.getElementById('addSave').disabled = false;
+  }
+});
+
+/* ---------- Modal: Editar app existente ---------- */
+const editOverlay = document.getElementById('editOverlay');
+let editingUrl = null;
+
+function openEdit(url){
+  const app = DATA.apps.find(a=>a.url===url);
+  if(!app) return;
+  editingUrl = url;
+  document.getElementById('e_name').value = app.name || '';
+  document.getElementById('e_url').value = app.url || '';
+  setIconValue('e_icon', app.icon || '');
+  document.getElementById('e_desc').value = app.desc || '';
+  const sel = document.getElementById('e_cat');
+  sel.innerHTML = DATA.categories.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  sel.value = app.category;
+  document.getElementById('editStatus').innerHTML = '';
+  if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token){
+    document.getElementById('editStatus').innerHTML = '<div class="status-msg err">Primero configura tu GitHub tocando ⚙️</div>';
+  }
+  editOverlay.classList.add('open');
+}
+
+document.getElementById('editCancel').addEventListener('click', ()=> editOverlay.classList.remove('open'));
+
+document.getElementById('editSave').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('editStatus');
+  const idx = DATA.apps.findIndex(a=>a.url===editingUrl);
+  if(idx===-1) return;
+
+  if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token){
+    statusEl.innerHTML = '<div class="status-msg err">Configura GitHub primero (⚙️).</div>';
+    return;
+  }
+
+  const original = { ...DATA.apps[idx] };
+  const updated = {
+    name: document.getElementById('e_name').value.trim(),
+    url: document.getElementById('e_url').value.trim(),
+    icon: document.getElementById('e_icon').value.trim(),
+    category: document.getElementById('e_cat').value,
+    desc: document.getElementById('e_desc').value.trim()
+  };
+  if(!updated.name || !updated.url){
+    statusEl.innerHTML = '<div class="status-msg err">Nombre y URL son obligatorios.</div>';
+    return;
+  }
+
+  statusEl.innerHTML = '<div class="status-msg loading">Guardando en GitHub...</div>';
+  document.getElementById('editSave').disabled = true;
+  DATA.apps[idx] = updated;
+
+  try{
+    await saveAppsJsonToGitHub();
+    statusEl.innerHTML = '<div class="status-msg ok">¡Listo! Cambios guardados.</div>';
+    buildChips();
+    render();
+    setTimeout(()=> editOverlay.classList.remove('open'), 1200);
+  }catch(e){
+    DATA.apps[idx] = original; // revertir en memoria si falló
+    statusEl.innerHTML = '<div class="status-msg err">Error: ' + e.message + '</div>';
+  }finally{
+    document.getElementById('editSave').disabled = false;
+  }
+});
+
+document.getElementById('editDelete').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('editStatus');
+  const idx = DATA.apps.findIndex(a=>a.url===editingUrl);
+  if(idx===-1) return;
+
+  if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token){
+    statusEl.innerHTML = '<div class="status-msg err">Configura GitHub primero (⚙️).</div>';
+    return;
+  }
+  if(!confirm('¿Eliminar esta app del Launchpad?')) return;
+
+  const removed = DATA.apps[idx];
+  DATA.apps.splice(idx,1);
+  statusEl.innerHTML = '<div class="status-msg loading">Eliminando...</div>';
+
+  try{
+    await saveAppsJsonToGitHub();
+    statusEl.innerHTML = '<div class="status-msg ok">Eliminada.</div>';
+    buildChips();
+    render();
+    setTimeout(()=> editOverlay.classList.remove('open'), 1000);
+  }catch(e){
+    DATA.apps.splice(idx,0,removed); // revertir
+    statusEl.innerHTML = '<div class="status-msg err">Error: ' + e.message + '</div>';
   }
 });
 
