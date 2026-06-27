@@ -203,6 +203,136 @@
     align-items:center;
   }
   .star-btn.fav{color:#d97706;}
+  .flow-toggle-btn{
+    width:46px;
+    flex-shrink:0;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--card);
+    font-size:19px;
+    cursor:pointer;
+  }
+  .flow-toggle-btn.active{
+    background:var(--ink);
+    border-color:var(--ink);
+  }
+  .flow-card{
+    background:linear-gradient(155deg, rgba(255,255,255,0.9) 0%, #eafaf3 100%);
+    border:1px solid #b9e8d4;
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:18px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.9),
+      0 3px 10px -3px rgba(0,0,0,0.15);
+  }
+  .flow-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:4px;
+  }
+  .flow-header h3{
+    margin:0;
+    font-size:16px;
+    font-weight:700;
+  }
+  .flow-reset{
+    font-size:12px;
+    color:var(--muted);
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  .flow-progress-bar{
+    height:6px;
+    border-radius:4px;
+    background:#dceee5;
+    margin:10px 0 14px;
+    overflow:hidden;
+  }
+  .flow-progress-fill{
+    height:100%;
+    background:linear-gradient(90deg,#2bcf9a,#2f8fae);
+    border-radius:4px;
+    transition:width .25s;
+  }
+  .flow-step{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:10px 8px;
+    border-radius:10px;
+    text-decoration:none;
+    color:var(--ink);
+  }
+  .flow-step.next-step{
+    background:rgba(43,207,154,0.14);
+  }
+  .flow-step-num{
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    background:#fff;
+    border:2px solid #b9e8d4;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12.5px;
+    font-weight:700;
+    flex-shrink:0;
+    color:var(--muted);
+  }
+  .flow-step.done .flow-step-num{
+    background:#2bcf9a;
+    border-color:#2bcf9a;
+    color:#fff;
+  }
+  .flow-step-body{flex:1;}
+  .flow-step-name{
+    font-size:14px;
+    font-weight:600;
+    line-height:1.3;
+  }
+  .flow-step.done .flow-step-name{
+    text-decoration:line-through;
+    color:var(--muted);
+  }
+  .flow-step-note{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:1px;
+  }
+  .flow-step-check{
+    font-size:18px;
+    flex-shrink:0;
+    color:#c9d6cf;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:2px;
+  }
+  .flow-step.done .flow-step-check{color:#2bcf9a;}
+  .flow-next-btn{
+    display:block;
+    width:100%;
+    text-align:center;
+    margin-top:12px;
+    padding:13px;
+    border-radius:10px;
+    background:var(--ink);
+    color:#fff;
+    text-decoration:none;
+    font-weight:600;
+    font-size:14.5px;
+  }
+  .flow-done-msg{
+    text-align:center;
+    font-size:13.5px;
+    color:var(--muted);
+    margin-top:12px;
+  }
   .empty{
     text-align:center;
     color:var(--muted);
@@ -379,11 +509,13 @@
   <h1>Launchpad</h1>
   <div class="search-row">
     <input id="search" type="text" placeholder="Buscar app...">
+    <button id="flowToggleBtn" class="flow-toggle-btn">🧭</button>
   </div>
   <div class="chips" id="chips"></div>
 </header>
 
 <main>
+  <div id="flowSection"></div>
   <div id="favSection"></div>
   <div id="results"></div>
   <div id="emptyMsg" class="empty" style="display:none;">No se encontró ninguna app con ese criterio.</div>
@@ -521,6 +653,7 @@ let favs = JSON.parse(localStorage.getItem('launchpad_favs') || '[]');
 let activeCat = 'all';
 let ghConfig = JSON.parse(localStorage.getItem('launchpad_gh_config') || '{}');
 let currentSha = null; // sha of apps.json on GitHub, needed to update it
+let flowVisible = JSON.parse(localStorage.getItem('launchpad_flow_visible') || 'false');
 
 async function loadData(){
   try{
@@ -534,7 +667,104 @@ async function loadData(){
   buildChips();
   populateCatSelect();
   render();
+  renderFlow();
 }
+
+/* ---------- Mi Flujo de Clase ---------- */
+function getFlowProgress(flowId){
+  return JSON.parse(localStorage.getItem('launchpad_flow_progress_' + flowId) || '[]');
+}
+function setFlowProgress(flowId, doneUrls){
+  localStorage.setItem('launchpad_flow_progress_' + flowId, JSON.stringify(doneUrls));
+}
+function findAppByUrl(url){
+  return DATA.apps.find(a=>a.url===url);
+}
+
+function renderFlow(){
+  const container = document.getElementById('flowSection');
+  const toggleBtn = document.getElementById('flowToggleBtn');
+  toggleBtn.classList.toggle('active', flowVisible);
+
+  if(!flowVisible || !DATA.flows || !DATA.flows.length){
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = DATA.flows.map(flow=>{
+    const done = getFlowProgress(flow.id);
+    const total = flow.steps.length;
+    const doneCount = flow.steps.filter(s=>done.includes(s.url)).length;
+    const pct = Math.round((doneCount/total)*100);
+    const firstPendingIdx = flow.steps.findIndex(s=>!done.includes(s.url));
+
+    const stepsHTML = flow.steps.map((step, i)=>{
+      const app = findAppByUrl(step.url);
+      const name = app ? app.name : step.url;
+      const isDone = done.includes(step.url);
+      const isNext = i === firstPendingIdx;
+      return `<a class="flow-step ${isDone?'done':''} ${isNext?'next-step':''}" href="${step.url}" target="_blank" rel="noopener" onclick="markFlowStepDone('${flow.id}','${step.url.replace(/'/g,"\\'")}')">
+        <div class="flow-step-num">${isDone?'✓':(i+1)}</div>
+        <div class="flow-step-body">
+          <div class="flow-step-name">${i+1}. ${name}</div>
+          <div class="flow-step-note">${step.note||''}</div>
+        </div>
+        <button class="flow-step-check" onclick="event.preventDefault();event.stopPropagation();toggleFlowStep('${flow.id}','${step.url.replace(/'/g,"\\'")}')">${isDone?'★':'☆'}</button>
+      </a>`;
+    }).join('');
+
+    let footerHTML = '';
+    if(firstPendingIdx === -1){
+      footerHTML = `<div class="flow-done-msg">🎉 ¡Completaste todo el flujo! <button class="flow-reset" onclick="resetFlow('${flow.id}')">Reiniciar</button></div>`;
+    } else {
+      const nextStep = flow.steps[firstPendingIdx];
+      const nextApp = findAppByUrl(nextStep.url);
+      footerHTML = `<a class="flow-next-btn" href="${nextStep.url}" target="_blank" rel="noopener" onclick="markFlowStepDone('${flow.id}','${nextStep.url.replace(/'/g,"\\'")}')">Siguiente paso → ${nextApp ? nextApp.name : ''}</a>`;
+    }
+
+    return `<div class="flow-card">
+      <div class="flow-header">
+        <h3>${flow.icon||'🧭'} ${flow.title}</h3>
+        <button class="flow-reset" onclick="resetFlow('${flow.id}')">Reiniciar</button>
+      </div>
+      <div class="flow-progress-bar"><div class="flow-progress-fill" style="width:${pct}%"></div></div>
+      ${stepsHTML}
+      ${footerHTML}
+    </div>`;
+  }).join('');
+}
+
+function toggleFlowStep(flowId, url){
+  let done = getFlowProgress(flowId);
+  if(done.includes(url)){
+    done = done.filter(u=>u!==url);
+  } else {
+    done.push(url);
+  }
+  setFlowProgress(flowId, done);
+  renderFlow();
+}
+
+function markFlowStepDone(flowId, url){
+  let done = getFlowProgress(flowId);
+  if(!done.includes(url)){
+    done.push(url);
+    setFlowProgress(flowId, done);
+  }
+  // pequeño delay para que se vea el cambio al volver de la pestaña nueva
+  setTimeout(renderFlow, 300);
+}
+
+function resetFlow(flowId){
+  setFlowProgress(flowId, []);
+  renderFlow();
+}
+
+document.getElementById('flowToggleBtn').addEventListener('click', ()=>{
+  flowVisible = !flowVisible;
+  localStorage.setItem('launchpad_flow_visible', JSON.stringify(flowVisible));
+  renderFlow();
+});
 
 function catColor(catId){
   const c = DATA.categories.find(c=>c.id===catId);
