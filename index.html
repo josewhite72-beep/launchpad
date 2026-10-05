@@ -178,6 +178,48 @@
     line-height:1.3;
     flex:1;
   }
+  .card-badges{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    margin-top:2px;
+  }
+  .badge{
+    font-size:10.5px;
+    line-height:1;
+    padding:3px 6px;
+    border-radius:999px;
+    border:1px solid #cbd5e1;
+    background:#fff;
+    color:#334155;
+    white-space:nowrap;
+  }
+  .badge-beta{ border-color:#f59e0b; color:#92400e; }
+  .badge-idea{ border-color:#94a3b8; color:#475569; }
+  .badge-archived{ border-color:#94a3b8; color:#64748b; }
+  .card.is-archived{ opacity:.55; }
+  .card.is-idea{ cursor:default; }
+  .offline-note{
+    margin:0 0 12px;
+    padding:8px 12px;
+    border-radius:10px;
+    background:#fef3c7;
+    color:#92400e;
+    font-size:13px;
+  }
+  .check-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    font-size:14px;
+  }
+  .check-row label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-weight:400;
+    margin:0;
+  }
   .star-btn{
     background:none;
     border:none;
@@ -557,6 +599,23 @@
       <label>Descripción breve (opcional)</label>
       <textarea id="f_desc" placeholder="Qué hace esta app..."></textarea>
     </div>
+    <div class="field">
+      <label>Estado</label>
+      <select id="f_status">
+        <option value="stable">Estable</option>
+        <option value="beta">Beta</option>
+        <option value="idea">Idea (sin publicar)</option>
+        <option value="archived">Archivada</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Detalles (opcional)</label>
+      <div class="check-row">
+        <label><input type="checkbox" id="f_offline"> Funciona sin internet</label>
+        <label><input type="checkbox" id="f_key_groq"> Usa clave Groq</label>
+        <label><input type="checkbox" id="f_key_deepseek"> Usa clave DeepSeek</label>
+      </div>
+    </div>
     <div class="sheet-actions">
       <button class="btn btn-secondary" id="addCancel">Cancelar</button>
       <button class="btn btn-primary" id="addSave">Guardar en GitHub</button>
@@ -604,6 +663,23 @@
     <div class="field">
       <label>Descripción breve</label>
       <textarea id="e_desc"></textarea>
+    </div>
+    <div class="field">
+      <label>Estado</label>
+      <select id="e_status">
+        <option value="stable">Estable</option>
+        <option value="beta">Beta</option>
+        <option value="idea">Idea (sin publicar)</option>
+        <option value="archived">Archivada</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Detalles (opcional)</label>
+      <div class="check-row">
+        <label><input type="checkbox" id="e_offline"> Funciona sin internet</label>
+        <label><input type="checkbox" id="e_key_groq"> Usa clave Groq</label>
+        <label><input type="checkbox" id="e_key_deepseek"> Usa clave DeepSeek</label>
+      </div>
     </div>
     <div class="sheet-actions">
       <button class="btn btn-secondary" id="editCancel">Cancelar</button>
@@ -655,15 +731,124 @@ let ghConfig = JSON.parse(localStorage.getItem('launchpad_gh_config') || '{}');
 let currentSha = null; // sha of apps.json on GitHub, needed to update it
 let flowVisible = JSON.parse(localStorage.getItem('launchpad_flow_visible') || 'false');
 
-async function loadData(){
-  try{
-    const res = await fetch('apps.json?t=' + Date.now());
-    DATA = await res.json();
-  }catch(e){
-    document.getElementById('results').innerHTML = '<div class="empty">No se pudo cargar apps.json. Verifica que el archivo esté en el mismo repositorio.</div>';
-    return;
+/* ---------- Validación del catálogo ----------
+   Los campos status / offline / needsApiKey son opcionales:
+   una app sin ellos se trata como estable, con internet y sin clave. */
+const CATALOG_CACHE_KEY = 'launchpad_catalog_cache';
+const APP_STATUSES = ['stable','beta','idea','archived'];
+const API_KEYS = ['groq','deepseek'];
+
+function validateCatalog(cat){
+  const errors = [], warnings = [];
+  if(!cat || typeof cat !== 'object' || Array.isArray(cat)){
+    return { ok:false, errors:['El catálogo no es un objeto JSON.'], warnings };
   }
-  document.querySelector('footer').textContent = 'Launchpad — ' + DATA.apps.length + ' apps';
+  if(!Array.isArray(cat.categories)) errors.push('Falta la lista "categories".');
+  if(!Array.isArray(cat.apps)) errors.push('Falta la lista "apps".');
+  if(cat.flows !== undefined && !Array.isArray(cat.flows)) errors.push('"flows" debe ser una lista.');
+  if(errors.length) return { ok:false, errors, warnings };
+
+  const catIds = new Set();
+  cat.categories.forEach((c,i)=>{
+    if(!c || !c.id) errors.push('Categoría #' + (i+1) + ' sin id.');
+    else if(catIds.has(c.id)) errors.push('Categoría repetida: ' + c.id);
+    else catIds.add(c.id);
+  });
+
+  const urls = new Set();
+  cat.apps.forEach((a,i)=>{
+    const tag = (a && a.name) ? '"' + a.name + '"' : 'App #' + (i+1);
+    if(!a || typeof a !== 'object'){ errors.push(tag + ' no es un objeto.'); return; }
+    if(!a.name || !String(a.name).trim()) errors.push(tag + ': falta el nombre.');
+    const url = (a.url || '').trim();
+    if(!url){
+      if(a.status !== 'idea') errors.push(tag + ': falta la URL (solo una app en estado "Idea" puede ir sin URL).');
+    } else {
+      if(!/^https?:\/\//.test(url)) errors.push(tag + ': la URL debe empezar con https://');
+      if(urls.has(url)) errors.push(tag + ': la URL ya la usa otra app.');
+      urls.add(url);
+    }
+    if(!catIds.has(a.category)) errors.push(tag + ': la categoría "' + a.category + '" no existe.');
+    if(a.status !== undefined && !APP_STATUSES.includes(a.status)) errors.push(tag + ': estado no válido "' + a.status + '".');
+    if(a.offline !== undefined && typeof a.offline !== 'boolean') errors.push(tag + ': "offline" debe ser true o false.');
+    if(a.needsApiKey !== undefined){
+      if(!Array.isArray(a.needsApiKey)) errors.push(tag + ': "needsApiKey" debe ser una lista.');
+      else a.needsApiKey.forEach(k=>{ if(!API_KEYS.includes(k)) warnings.push(tag + ': clave desconocida "' + k + '".'); });
+    }
+  });
+
+  (cat.flows || []).forEach(f=>{
+    if(!f || !f.id || !Array.isArray(f.steps)){ errors.push('Un flujo no tiene id o pasos.'); return; }
+    f.steps.forEach((s,i)=>{
+      if(!s || !s.url) errors.push('Flujo "' + (f.title||f.id) + '", paso ' + (i+1) + ': sin URL.');
+      else if(!urls.has(s.url)) warnings.push('Flujo "' + (f.title||f.id) + '", paso ' + (i+1) + ': ninguna app tiene esa URL.');
+    });
+  });
+
+  return { ok: errors.length === 0, errors, warnings };
+}
+
+function readCachedCatalog(){
+  try{
+    const raw = localStorage.getItem(CATALOG_CACHE_KEY);
+    if(!raw) return null;
+    const cached = JSON.parse(raw);
+    return validateCatalog(cached.data).ok ? cached : null;
+  }catch(e){ return null; }
+}
+function writeCachedCatalog(data){
+  try{
+    localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify({ savedAt: new Date().toISOString(), data }));
+  }catch(e){ /* sin espacio: seguimos sin copia */ }
+}
+function showOfflineNote(text){
+  const main = document.querySelector('main');
+  let note = document.getElementById('offlineNote');
+  if(!note){
+    note = document.createElement('div');
+    note.id = 'offlineNote';
+    note.className = 'offline-note';
+    main.insertBefore(note, main.firstChild);
+  }
+  note.textContent = text;
+}
+
+async function loadData(){
+  let problem = '';
+  try{
+    const res = await fetch('apps.json?t=' + Date.now(), { cache:'no-store' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    let fresh = null;
+    try{ fresh = JSON.parse(await res.text()); }
+    catch(parseErr){ problem = 'apps.json en GitHub no es JSON válido (revisa comas y llaves).'; }
+    const v = fresh ? validateCatalog(fresh) : { ok:false, errors:[], warnings:[] };
+    if(!fresh){
+      console.warn('[Launchpad] apps.json no se pudo leer como JSON');
+    } else if(!v.ok){
+      console.warn('[Launchpad] apps.json con errores:', v.errors);
+      problem = 'apps.json en GitHub tiene errores (' + v.errors[0] + ').';
+    } else {
+      if(v.warnings.length) console.info('[Launchpad] avisos del catálogo:', v.warnings);
+      DATA = fresh;
+      writeCachedCatalog(fresh);
+    }
+  }catch(e){
+    problem = 'Sin conexión.';
+  }
+
+  if(problem){
+    const cached = readCachedCatalog();
+    if(!cached){
+      document.getElementById('results').innerHTML = '<div class="empty">No se pudo cargar apps.json y no hay copia guardada en este dispositivo. ' + problem + '</div>';
+      document.querySelector('footer').textContent = 'Launchpad';
+      return;
+    }
+    DATA = cached.data;
+    const when = new Date(cached.savedAt).toLocaleString('es-PA', { day:'numeric', month:'short', hour:'numeric', minute:'2-digit' });
+    showOfflineNote(problem + ' Mostrando la copia guardada (' + when + ').');
+  }
+
+  document.querySelector('footer').textContent = 'Launchpad — ' + DATA.apps.filter(a=>a.status!=='archived').length + ' apps';
   buildChips();
   populateCatSelect();
   render();
@@ -840,33 +1025,62 @@ function iconHTML(app){
   return `<span style="color:${catColor(app.category)}; font-weight:700;">${initial}</span>`;
 }
 
+/* Clave de la app para favoritos/edición: la URL, o el nombre si es una idea sin URL */
+function appKey(app){
+  return app.url || ('idea:' + app.name);
+}
+function findAppByKey(key){
+  return DATA.apps.find(a=>appKey(a)===key);
+}
+
+function badgesHTML(app){
+  const b = [];
+  if(app.status==='beta') b.push('<span class="badge badge-beta">Beta</span>');
+  if(app.status==='idea') b.push('<span class="badge badge-idea">Idea</span>');
+  if(app.status==='archived') b.push('<span class="badge badge-archived">Archivada</span>');
+  if(app.offline===true) b.push('<span class="badge" title="Funciona sin internet">📶 Offline</span>');
+  (app.needsApiKey||[]).forEach(k=>{
+    const label = k==='groq' ? 'Groq' : k==='deepseek' ? 'DeepSeek' : k;
+    b.push(`<span class="badge" title="Necesita tu clave de ${label}">🔑 ${label}</span>`);
+  });
+  return b.length ? `<div class="card-badges">${b.join('')}</div>` : '';
+}
+
 function cardHTML(app, idx){
-  const isFav = favs.includes(app.url);
+  const key = appKey(app);
+  const keyAttr = key.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  const isFav = favs.includes(key);
   const tint = catPastelBg(app.category);
   const border = catPastelBorder(app.category);
-  return `<a class="card" style="--card-tint:${tint}; --card-border:${border};" href="${app.url}" target="_blank" rel="noopener">
+  const hasUrl = !!app.url;
+  const cls = 'card' + (app.status==='archived' ? ' is-archived' : '') + (!hasUrl ? ' is-idea' : '');
+  const linkAttrs = hasUrl ? `href="${app.url}" target="_blank" rel="noopener"` : `href="#" onclick="event.preventDefault()"`;
+  return `<a class="${cls}" style="--card-tint:${tint}; --card-border:${border};" ${linkAttrs}>
     <div class="card-top-row">
       <div class="card-icon">${iconHTML(app)}</div>
       <div class="card-actions">
-        <button class="edit-btn" data-url="${app.url.replace(/"/g,'&quot;')}" onclick="event.preventDefault();event.stopPropagation();openEdit(this.dataset.url)">✏️</button>
-        <button class="star-btn ${isFav?'fav':''}" data-url="${app.url.replace(/"/g,'&quot;')}" onclick="event.preventDefault();event.stopPropagation();toggleFav(this.dataset.url)">${isFav?'★':'☆'}</button>
+        <button class="edit-btn" data-key="${keyAttr}" onclick="event.preventDefault();event.stopPropagation();openEdit(this.dataset.key)">✏️</button>
+        <button class="star-btn ${isFav?'fav':''}" data-key="${keyAttr}" onclick="event.preventDefault();event.stopPropagation();toggleFav(this.dataset.key)">${isFav?'★':'☆'}</button>
       </div>
     </div>
     <div class="card-name">${app.name}</div>
     <div class="card-desc">${app.desc||''}</div>
+    ${badgesHTML(app)}
   </a>`;
 }
 
 function render(){
   const q = document.getElementById('search').value.trim().toLowerCase();
   let apps = DATA.apps.filter(a=>{
+    // Las archivadas solo aparecen al buscarlas por nombre
+    if(a.status==='archived' && !q) return false;
     const matchesCat = activeCat==='all' || a.category===activeCat;
     const matchesQ = !q || a.name.toLowerCase().includes(q) || (a.desc||'').toLowerCase().includes(q);
     return matchesCat && matchesQ;
   });
 
   const favSection = document.getElementById('favSection');
-  const favApps = apps.filter(a=>favs.includes(a.url));
+  const favApps = apps.filter(a=>favs.includes(appKey(a)));
   if(favApps.length && !q && activeCat==='all'){
     favSection.innerHTML = `<div class="section-title">★ Favoritas</div><div class="grid">${favApps.map(cardHTML).join('')}</div>`;
   } else {
@@ -1003,16 +1217,43 @@ document.getElementById('addBtn').addEventListener('click', ()=>{
 });
 document.getElementById('addCancel').addEventListener('click', ()=> addOverlay.classList.remove('open'));
 
+/* Lee los campos opcionales de un formulario (prefijo 'f' o 'e') */
+function readOptionalFields(p){
+  const keys = [];
+  if(document.getElementById(p + '_key_groq').checked) keys.push('groq');
+  if(document.getElementById(p + '_key_deepseek').checked) keys.push('deepseek');
+  return {
+    status: document.getElementById(p + '_status').value,
+    offline: document.getElementById(p + '_offline').checked,
+    needsApiKey: keys
+  };
+}
+function fillOptionalFields(p, app){
+  document.getElementById(p + '_status').value = app.status || 'stable';
+  document.getElementById(p + '_offline').checked = app.offline === true;
+  const keys = app.needsApiKey || [];
+  document.getElementById(p + '_key_groq').checked = keys.includes('groq');
+  document.getElementById(p + '_key_deepseek').checked = keys.includes('deepseek');
+}
+/* Escribe los opcionales solo si aportan algo: así el JSON de las apps viejas no se llena de valores por defecto */
+function applyOptionalFields(app, opt){
+  if(opt.status && opt.status !== 'stable') app.status = opt.status; else delete app.status;
+  if(opt.offline) app.offline = true; else delete app.offline;
+  if(opt.needsApiKey.length) app.needsApiKey = opt.needsApiKey; else delete app.needsApiKey;
+  return app;
+}
+
 document.getElementById('addSave').addEventListener('click', async ()=>{
   const name = document.getElementById('f_name').value.trim();
   const url = document.getElementById('f_url').value.trim();
   const icon = document.getElementById('f_icon').value.trim();
   const category = document.getElementById('f_cat').value;
   const desc = document.getElementById('f_desc').value.trim();
+  const opt = readOptionalFields('f');
   const statusEl = document.getElementById('addStatus');
 
-  if(!name || !url){
-    statusEl.innerHTML = '<div class="status-msg err">Nombre y URL son obligatorios.</div>';
+  if(!name || (!url && opt.status !== 'idea')){
+    statusEl.innerHTML = '<div class="status-msg err">Nombre y URL son obligatorios (la URL puede faltar solo si el estado es "Idea").</div>';
     return;
   }
   if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token){
@@ -1024,19 +1265,19 @@ document.getElementById('addSave').addEventListener('click', async ()=>{
   document.getElementById('addSave').disabled = true;
 
   try{
-    DATA.apps.push({ name, url, category, desc, icon });
-    await saveAppsJsonToGitHub();
+    const newApp = applyOptionalFields({ name, url, category, desc, icon }, opt);
+    if(!newApp.icon) delete newApp.icon;
+    await saveCatalogChange(cat=>{ cat.apps.push(newApp); }, 'Agregar app: ' + name);
     statusEl.innerHTML = '<div class="status-msg ok">¡Listo! App agregada. Vercel va a redeployar en unos segundos.</div>';
     document.getElementById('f_name').value = '';
     document.getElementById('f_url').value = '';
     setIconValue('f_icon', '');
     document.getElementById('f_desc').value = '';
-    buildChips();
-    render();
+    fillOptionalFields('f', {});
+    refreshAfterSave();
     setTimeout(()=> addOverlay.classList.remove('open'), 1400);
   }catch(e){
-    DATA.apps.pop(); // revertir en memoria si falló
-    statusEl.innerHTML = '<div class="status-msg err">Error: ' + e.message + '</div>';
+    statusEl.innerHTML = '<div class="status-msg err">' + e.message + '</div>';
   }finally{
     document.getElementById('addSave').disabled = false;
   }
@@ -1044,12 +1285,12 @@ document.getElementById('addSave').addEventListener('click', async ()=>{
 
 /* ---------- Modal: Editar app existente ---------- */
 const editOverlay = document.getElementById('editOverlay');
-let editingUrl = null;
+let editingKey = null;
 
-function openEdit(url){
-  const app = DATA.apps.find(a=>a.url===url);
+function openEdit(key){
+  const app = findAppByKey(key);
   if(!app) return;
-  editingUrl = url;
+  editingKey = key;
   document.getElementById('e_name').value = app.name || '';
   document.getElementById('e_url').value = app.url || '';
   setIconValue('e_icon', app.icon || '');
@@ -1057,6 +1298,7 @@ function openEdit(url){
   const sel = document.getElementById('e_cat');
   sel.innerHTML = DATA.categories.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
   sel.value = app.category;
+  fillOptionalFields('e', app);
   document.getElementById('editStatus').innerHTML = '';
   if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token){
     document.getElementById('editStatus').innerHTML = '<div class="status-msg err">Primero configura tu GitHub tocando ⚙️</div>';
@@ -1066,42 +1308,66 @@ function openEdit(url){
 
 document.getElementById('editCancel').addEventListener('click', ()=> editOverlay.classList.remove('open'));
 
+/* Si cambia la URL, mueve favoritos, pasos del flujo y progreso a la URL nueva */
+function migrateLocalKey(oldKey, newKey){
+  if(oldKey === newKey) return;
+  if(favs.includes(oldKey)){
+    favs = favs.map(f=> f===oldKey ? newKey : f);
+    localStorage.setItem('launchpad_favs', JSON.stringify(favs));
+  }
+  (DATA.flows||[]).forEach(f=>{
+    const done = getFlowProgress(f.id);
+    if(done.includes(oldKey)) setFlowProgress(f.id, done.map(u=> u===oldKey ? newKey : u));
+  });
+}
+
 document.getElementById('editSave').addEventListener('click', async ()=>{
   const statusEl = document.getElementById('editStatus');
-  const idx = DATA.apps.findIndex(a=>a.url===editingUrl);
-  if(idx===-1) return;
+  const current = findAppByKey(editingKey);
+  if(!current) return;
 
   if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token){
     statusEl.innerHTML = '<div class="status-msg err">Configura GitHub primero (⚙️).</div>';
     return;
   }
 
-  const original = { ...DATA.apps[idx] };
-  const updated = {
+  const fields = {
     name: document.getElementById('e_name').value.trim(),
     url: document.getElementById('e_url').value.trim(),
     icon: document.getElementById('e_icon').value.trim(),
     category: document.getElementById('e_cat').value,
     desc: document.getElementById('e_desc').value.trim()
   };
-  if(!updated.name || !updated.url){
-    statusEl.innerHTML = '<div class="status-msg err">Nombre y URL son obligatorios.</div>';
+  const opt = readOptionalFields('e');
+  if(!fields.name || (!fields.url && opt.status !== 'idea')){
+    statusEl.innerHTML = '<div class="status-msg err">Nombre y URL son obligatorios (la URL puede faltar solo si el estado es "Idea").</div>';
     return;
   }
 
   statusEl.innerHTML = '<div class="status-msg loading">Guardando en GitHub...</div>';
   document.getElementById('editSave').disabled = true;
-  DATA.apps[idx] = updated;
+  const oldKey = editingKey;
+  const oldUrl = current.url;
 
   try{
-    await saveAppsJsonToGitHub();
+    await saveCatalogChange(cat=>{
+      const idx = cat.apps.findIndex(a=>appKey(a)===oldKey);
+      if(idx === -1) throw new Error('Esta app ya no está en apps.json de GitHub (¿la borraste desde otro dispositivo?). Recarga la página.');
+      // Fusiona: conserva cualquier campo que el formulario no conoce
+      const merged = applyOptionalFields(Object.assign({}, cat.apps[idx], fields), opt);
+      if(!merged.icon) delete merged.icon;
+      cat.apps[idx] = merged;
+      // Si cambió la URL, los pasos del flujo la siguen
+      if(oldUrl && fields.url && oldUrl !== fields.url){
+        (cat.flows||[]).forEach(f=> f.steps.forEach(s=>{ if(s.url===oldUrl) s.url = fields.url; }));
+      }
+    }, 'Editar app: ' + fields.name);
+    migrateLocalKey(oldKey, fields.url || ('idea:' + fields.name));
     statusEl.innerHTML = '<div class="status-msg ok">¡Listo! Cambios guardados.</div>';
-    buildChips();
-    render();
+    refreshAfterSave();
     setTimeout(()=> editOverlay.classList.remove('open'), 1200);
   }catch(e){
-    DATA.apps[idx] = original; // revertir en memoria si falló
-    statusEl.innerHTML = '<div class="status-msg err">Error: ' + e.message + '</div>';
+    statusEl.innerHTML = '<div class="status-msg err">' + e.message + '</div>';
   }finally{
     document.getElementById('editSave').disabled = false;
   }
@@ -1109,30 +1375,45 @@ document.getElementById('editSave').addEventListener('click', async ()=>{
 
 document.getElementById('editDelete').addEventListener('click', async ()=>{
   const statusEl = document.getElementById('editStatus');
-  const idx = DATA.apps.findIndex(a=>a.url===editingUrl);
-  if(idx===-1) return;
+  const current = findAppByKey(editingKey);
+  if(!current) return;
 
   if(!ghConfig.owner || !ghConfig.repo || !ghConfig.token){
     statusEl.innerHTML = '<div class="status-msg err">Configura GitHub primero (⚙️).</div>';
     return;
   }
-  if(!confirm('¿Eliminar esta app del Launchpad?')) return;
+  const inFlow = current.url && (DATA.flows||[]).some(f=> f.steps.some(s=> s.url===current.url));
+  const msg = inFlow
+    ? '¿Eliminar esta app? Está en "Mi Flujo de Clase" y su paso también se quitará del flujo.\n\nSi solo quieres ocultarla, cancela y ponle el estado "Archivada".'
+    : '¿Eliminar esta app del Launchpad?\n\nSi solo quieres ocultarla, cancela y ponle el estado "Archivada".';
+  if(!confirm(msg)) return;
 
-  const removed = DATA.apps[idx];
-  DATA.apps.splice(idx,1);
+  const key = editingKey;
+  const url = current.url;
   statusEl.innerHTML = '<div class="status-msg loading">Eliminando...</div>';
 
   try{
-    await saveAppsJsonToGitHub();
+    await saveCatalogChange(cat=>{
+      const idx = cat.apps.findIndex(a=>appKey(a)===key);
+      if(idx === -1) throw new Error('Esta app ya no está en apps.json de GitHub. Recarga la página.');
+      cat.apps.splice(idx,1);
+      if(url) (cat.flows||[]).forEach(f=>{ f.steps = f.steps.filter(s=> s.url!==url); });
+    }, 'Eliminar app: ' + current.name);
     statusEl.innerHTML = '<div class="status-msg ok">Eliminada.</div>';
-    buildChips();
-    render();
+    refreshAfterSave();
     setTimeout(()=> editOverlay.classList.remove('open'), 1000);
   }catch(e){
-    DATA.apps.splice(idx,0,removed); // revertir
-    statusEl.innerHTML = '<div class="status-msg err">Error: ' + e.message + '</div>';
+    statusEl.innerHTML = '<div class="status-msg err">' + e.message + '</div>';
   }
 });
+
+function refreshAfterSave(){
+  document.querySelector('footer').textContent = 'Launchpad — ' + DATA.apps.filter(a=>a.status!=='archived').length + ' apps';
+  buildChips();
+  populateCatSelect();
+  render();
+  renderFlow();
+}
 
 /* ---------- Modal: Configuración GitHub ---------- */
 const settingsOverlay = document.getElementById('settingsOverlay');
@@ -1173,33 +1454,62 @@ function utf8ToBase64(str){
   return btoa(unescape(encodeURIComponent(str)));
 }
 
-async function saveAppsJsonToGitHub(){
+function base64ToUtf8(b64){
+  return decodeURIComponent(escape(atob(b64.replace(/\s/g,''))));
+}
+
+/* Guarda un cambio en apps.json:
+   1) lee la versión ACTUAL de GitHub (no la que está en pantalla, que puede ser vieja o una copia offline)
+   2) le aplica el cambio
+   3) la valida: si hay errores, NO hace commit
+   4) hace el commit y actualiza la pantalla y la copia offline */
+async function saveCatalogChange(mutate, message){
+  if(!navigator.onLine) throw new Error('Sin conexión: no se puede guardar en GitHub ahora.');
   const apiBase = `https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${ghConfig.path}`;
 
-  // 1. Obtener el sha actual del archivo (requerido por la API para actualizar)
-  const getRes = await fetch(apiBase + '?ref=' + ghConfig.branch, { headers: await ghHeaders() });
+  const getRes = await fetch(apiBase + '?ref=' + encodeURIComponent(ghConfig.branch) + '&t=' + Date.now(), { headers: await ghHeaders(), cache:'no-store' });
   if(!getRes.ok){
     throw new Error('No se pudo leer el archivo actual (' + getRes.status + '). Revisa usuario/repo/rama/token.');
   }
   const getData = await getRes.json();
-  const sha = getData.sha;
+  if(!getData.content){
+    throw new Error('GitHub no devolvió el contenido de apps.json (¿pasa de 1 MB? Revisa íconos importados muy pesados).');
+  }
 
-  // 2. Subir el contenido actualizado
-  const newContent = JSON.stringify(DATA, null, 2);
+  let remote;
+  try{
+    remote = JSON.parse(base64ToUtf8(getData.content));
+  }catch(e){
+    throw new Error('El apps.json que está en GitHub no es JSON válido. Corrígelo en GitHub antes de seguir.');
+  }
+
+  mutate(remote);
+
+  const v = validateCatalog(remote);
+  if(!v.ok){
+    throw new Error('No se guardó. Hay errores:<br>• ' + v.errors.slice(0,5).join('<br>• ') + (v.errors.length>5 ? '<br>…y ' + (v.errors.length-5) + ' más.' : ''));
+  }
+
   const putRes = await fetch(apiBase, {
     method: 'PUT',
     headers: await ghHeaders(),
     body: JSON.stringify({
-      message: 'Agregar app vía Launchpad',
-      content: utf8ToBase64(newContent),
-      sha: sha,
+      message: message || 'Actualizar apps.json vía Launchpad',
+      content: utf8ToBase64(JSON.stringify(remote, null, 2) + '\n'),
+      sha: getData.sha,
       branch: ghConfig.branch
     })
   });
   if(!putRes.ok){
     const errBody = await putRes.json().catch(()=>({}));
+    if(putRes.status === 409) throw new Error('apps.json cambió en GitHub mientras guardabas. Inténtalo de nuevo.');
     throw new Error(errBody.message || ('Error al guardar (' + putRes.status + ')'));
   }
+
+  DATA = remote;
+  writeCachedCatalog(remote);
+  const note = document.getElementById('offlineNote');
+  if(note) note.remove();
 }
 </script>
 </body>
